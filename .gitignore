@@ -1,0 +1,41 @@
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+*.db
+*.sqlite3
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+.parcel-cache
+.tsbuildinfo
+
+# --- Environment Secrets (CRITICAL) ---
+# Never commit actual secret files, only commit the .env.example files
+.env
+.env.production
+.env.development
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# --- OS / IDE Files ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
