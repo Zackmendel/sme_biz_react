@@ -122,20 +122,20 @@ Goal: the core daily-use loop — the reason the app exists.
 
 **Direct-to-Supabase, no FastAPI involved** (per `docs/architecture.md`):
 
-- [ ] Sales entry form: product dropdown (+ "Other" free-text), quantity,
+- [x] Sales entry form: product dropdown (+ "Other" free-text), quantity,
   customer details, discount, payment type; price pre-fills from
   `products.default_price`, editable by admin/owner only
-- [ ] `total` computed server-side (Postgres generated column or a
+- [x] `total` computed server-side (Postgres generated column or a
   BEFORE INSERT/UPDATE trigger) — **never trust a client-submitted total**
-- [ ] Every sale must resolve to an open `accounting_cycles` row for its
+- [x] Every sale must resolve to an open `accounting_cycles` row for its
   `period_type`; if none is open, prompt the owner to confirm/open one
   (Balance Brought Forward flow from the PRD)
-- [ ] Purchases entry form — mirrors Sales, vendor details instead of
+- [x] Purchases entry form — mirrors Sales, vendor details instead of
   customer, no discount/payment_type
-- [ ] Sales/Purchases list views: sortable, filterable by date range,
+- [x] Sales/Purchases list views: sortable, filterable by date range,
   product, customer/vendor
-- [ ] RLS-scoped so staff only ever see/write their own business's rows
-- [ ] Verify: log a sale and a purchase as different roles; confirm a
+- [x] RLS-scoped so staff only ever see/write their own business's rows
+- [x] Verify: log a sale and a purchase as different roles; confirm a
   `staff` account cannot edit or delete an entry (per Admin Privileges
   table), and a `viewer` account cannot create one either
 

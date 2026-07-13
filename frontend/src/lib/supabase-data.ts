@@ -247,5 +247,151 @@ export async function updateStaffMember(
   return data as UserProfile;
 }
 
+// ---- Accounting Cycles ----
+
+export interface AccountingCycle {
+  id: string;
+  business_id: string;
+  period_type: "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+  start_date: string;
+  end_date: string;
+  balance_brought_forward: number;
+  debts_accrued: number;
+  is_closed: boolean;
+}
+
+/**
+ * Fetch all open cycles for a business.
+ */
+export async function fetchOpenCycles(
+  businessId: string
+): Promise<AccountingCycle[]> {
+  const { data, error } = await supabase
+    .from("accounting_cycles")
+    .select("*")
+    .eq("business_id", businessId)
+    .eq("is_closed", false);
+
+  if (error) throw error;
+  return data as AccountingCycle[];
+}
+
+/**
+ * Create/Open a new accounting cycle.
+ */
+export async function createAccountingCycle(
+  cycle: Omit<AccountingCycle, "id" | "is_closed" | "debts_accrued">
+): Promise<AccountingCycle> {
+  const { data, error } = await supabase
+    .from("accounting_cycles")
+    .insert({
+      ...cycle,
+      is_closed: false,
+      debts_accrued: 0,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as AccountingCycle;
+}
+
+// ---- Sales Ledger ----
+
+export interface Sale {
+  id: string;
+  business_id: string;
+  user_id: string;
+  cycle_id: string;
+  product_id: string | null;
+  item_name: string;
+  customer_details: string | null;
+  quantity: number;
+  price_per_unit: number;
+  discount: number;
+  total: number;
+  payment_type: "cash" | "transfer" | "card" | "credit";
+  created_at: string;
+  is_flagged: boolean;
+}
+
+/**
+ * Fetch all sales for a business.
+ */
+export async function fetchSales(businessId: string): Promise<Sale[]> {
+  const { data, error } = await supabase
+    .from("sales")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data as Sale[];
+}
+
+/**
+ * Log a new sale (omitting total as it's computed server-side).
+ */
+export async function createSale(
+  sale: Omit<Sale, "id" | "total" | "created_at" | "is_flagged">
+): Promise<Sale> {
+  const { data, error } = await supabase
+    .from("sales")
+    .insert(sale)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Sale;
+}
+
+// ---- Purchases Ledger ----
+
+export interface Purchase {
+  id: string;
+  business_id: string;
+  user_id: string;
+  cycle_id: string;
+  product_id: string | null;
+  item_name: string;
+  vendor_details: string | null;
+  quantity: number;
+  price_per_unit: number;
+  total: number;
+  created_at: string;
+  is_flagged: boolean;
+}
+
+/**
+ * Fetch all purchases for a business.
+ */
+export async function fetchPurchases(businessId: string): Promise<Purchase[]> {
+  const { data, error } = await supabase
+    .from("purchases")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data as Purchase[];
+}
+
+/**
+ * Log a new purchase.
+ */
+export async function createPurchase(
+  purchase: Omit<Purchase, "id" | "total" | "created_at" | "is_flagged">
+): Promise<Purchase> {
+  const { data, error } = await supabase
+    .from("purchases")
+    .insert(purchase)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Purchase;
+}
+
+
 
 

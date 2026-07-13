@@ -6,8 +6,9 @@ import { SignUpPage } from "@/pages/sign-up";
 import { OnboardingPage } from "@/pages/onboarding";
 import { ProductsPage } from "@/pages/products";
 import { StaffPage } from "@/pages/staff";
+import { LedgerPage } from "@/pages/ledger";
 import { useAuth } from "@/components/auth/auth-context";
-import { TrendingUp, Package, Users, LogOut, Home } from "lucide-react";
+import { TrendingUp, Package, Users, LogOut, Home, ShoppingCart } from "lucide-react";
 
 function Layout() {
   const { profile, signOut } = useAuth();
@@ -15,6 +16,7 @@ function Layout() {
 
   const navItems = [
     { label: "Dashboard", path: "/", icon: Home },
+    { label: "Ledger", path: "/ledger", icon: ShoppingCart },
     { label: "Products", path: "/products", icon: Package },
     { label: "Staff & Roles", path: "/staff", icon: Users },
   ];
@@ -93,19 +95,9 @@ export function App() {
       {/* Protected routes — AuthGuard redirects to sign-in or onboarding */}
       <Route element={<AuthGuard />}>
         <Route element={<Layout />}>
-          {/* Placeholder — will be replaced with dashboard in Phase 4 */}
-          <Route
-            path="/"
-            element={
-              <div className="flex flex-col items-center justify-center h-96 bg-card/25 border border-dashed border-border rounded-2xl p-8">
-                <Home className="h-10 w-10 text-muted-foreground mb-2" />
-                <h2 className="text-lg font-semibold text-foreground">Dashboard</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Dashboard metrics and charts coming soon in Phase 4.
-                </p>
-              </div>
-            }
-          />
+          {/* Dashboard Placeholder (Phase 4) — redirects to ledger for now */}
+          <Route path="/" element={<Navigate to="/ledger" replace />} />
+          <Route path="/ledger" element={<LedgerPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/staff" element={<StaffPage />} />
         </Route>
