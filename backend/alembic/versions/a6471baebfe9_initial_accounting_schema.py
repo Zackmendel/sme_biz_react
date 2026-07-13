@@ -185,10 +185,24 @@ def upgrade() -> None:
     for t in tables:
         op.execute(f"ALTER TABLE {t} ENABLE ROW LEVEL SECURITY;")
 
+    # 4b. Create RLS helper functions (SECURITY DEFINER to avoid recursion)
+    op.execute("""
+        CREATE OR REPLACE FUNCTION public.get_user_business_id(user_uuid uuid)
+        RETURNS uuid AS $$
+          SELECT business_id FROM public.users WHERE id = user_uuid;
+        $$ LANGUAGE sql SECURITY DEFINER;
+    """)
+    op.execute("""
+        CREATE OR REPLACE FUNCTION public.get_user_role(user_uuid uuid)
+        RETURNS public.role_enum AS $$
+          SELECT role FROM public.users WHERE id = user_uuid;
+        $$ LANGUAGE sql SECURITY DEFINER;
+    """)
+
     # 5. RLS Policies
     op.execute("""
         CREATE POLICY business_select_policy ON businesses FOR SELECT TO authenticated
-        USING (id = (SELECT business_id FROM users WHERE id = auth.uid()));
+        USING (id = get_user_business_id(auth.uid()));
     """)
     op.execute("""
         CREATE POLICY business_insert_policy ON businesses FOR INSERT TO authenticated
@@ -196,48 +210,48 @@ def upgrade() -> None:
     """)
     op.execute("""
         CREATE POLICY business_update_policy ON businesses FOR UPDATE TO authenticated
-        USING (id = (SELECT business_id FROM users WHERE id = auth.uid() AND role IN ('owner', 'admin')));
+        USING (id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) IN ('owner', 'admin'));
     """)
     op.execute("""
         CREATE POLICY business_delete_policy ON businesses FOR DELETE TO authenticated
-        USING (id = (SELECT business_id FROM users WHERE id = auth.uid() AND role = 'owner'));
+        USING (id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) = 'owner');
     """)
 
     op.execute("""
         CREATE POLICY user_select_policy ON users FOR SELECT TO authenticated
-        USING (business_id = (SELECT business_id FROM users WHERE id = auth.uid()) OR id = auth.uid());
+        USING (id = auth.uid() OR business_id = get_user_business_id(auth.uid()));
     """)
     op.execute("""
         CREATE POLICY user_update_policy ON users FOR UPDATE TO authenticated
-        USING (id = auth.uid() OR (business_id = (SELECT business_id FROM users WHERE id = auth.uid()) AND (SELECT role FROM users WHERE id = auth.uid()) IN ('owner', 'admin')));
+        USING (id = auth.uid() OR (business_id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) IN ('owner', 'admin')));
     """)
 
     scoped_tables = ['products', 'accounting_cycles', 'sales', 'purchases', 'debtors', 'daily_summaries']
     for t in scoped_tables:
         op.execute(f"""
             CREATE POLICY {t}_select_policy ON {t} FOR SELECT TO authenticated
-            USING (business_id = (SELECT business_id FROM users WHERE id = auth.uid()));
+            USING (business_id = get_user_business_id(auth.uid()));
         """)
         op.execute(f"""
             CREATE POLICY {t}_insert_policy ON {t} FOR INSERT TO authenticated
-            WITH CHECK (business_id = (SELECT business_id FROM users WHERE id = auth.uid()) AND (SELECT role FROM users WHERE id = auth.uid()) IN ('owner', 'admin', 'staff'));
+            WITH CHECK (business_id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) IN ('owner', 'admin', 'staff'));
         """)
         op.execute(f"""
             CREATE POLICY {t}_update_policy ON {t} FOR UPDATE TO authenticated
-            USING (business_id = (SELECT business_id FROM users WHERE id = auth.uid()) AND (SELECT role FROM users WHERE id = auth.uid()) IN ('owner', 'admin'));
+            USING (business_id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) IN ('owner', 'admin'));
         """)
         op.execute(f"""
             CREATE POLICY {t}_delete_policy ON {t} FOR DELETE TO authenticated
-            USING (business_id = (SELECT business_id FROM users WHERE id = auth.uid()) AND (SELECT role FROM users WHERE id = auth.uid()) IN ('owner', 'admin'));
+            USING (business_id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) IN ('owner', 'admin'));
         """)
 
     op.execute("""
         CREATE POLICY audit_trail_select_policy ON audit_trail FOR SELECT TO authenticated
-        USING (business_id = (SELECT business_id FROM users WHERE id = auth.uid()));
+        USING (business_id = get_user_business_id(auth.uid()));
     """)
     op.execute("""
         CREATE POLICY audit_trail_insert_policy ON audit_trail FOR INSERT TO authenticated
-        WITH CHECK (business_id = (SELECT business_id FROM users WHERE id = auth.uid()));
+        WITH CHECK (business_id = get_user_business_id(auth.uid()));
     """)
 
     # 6. Auth trigger integration
@@ -433,20 +447,22 @@ def downgrade() -> None:
     op.execute("DROP TRIGGER IF EXISTS trg_calculate_purchase_total ON purchases;")
     op.execute("DROP FUNCTION IF EXISTS calculate_purchase_total();")
 
-    # 4. Drop auth triggers
+    # 4. Drop auth triggers and RLS helper functions
     op.execute("DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;")
     op.execute("DROP FUNCTION IF EXISTS public.handle_new_user();")
+    op.execute("DROP FUNCTION IF EXISTS public.get_user_role(uuid);")
+    op.execute("DROP FUNCTION IF EXISTS public.get_user_business_id(uuid);")
 
-    # 5. Drop tables
-    op.drop_table('sales')
-    op.drop_table('purchases')
-    op.drop_table('audit_trail')
-    op.drop_table('users')
-    op.drop_table('products')
-    op.drop_table('debtors')
-    op.drop_table('daily_summaries')
-    op.drop_table('accounting_cycles')
-    op.drop_table('businesses')
+    # 5. Drop tables (with CASCADE to drop dependent RLS policies and FKs)
+    op.execute("DROP TABLE IF EXISTS sales CASCADE;")
+    op.execute("DROP TABLE IF EXISTS purchases CASCADE;")
+    op.execute("DROP TABLE IF EXISTS audit_trail CASCADE;")
+    op.execute("DROP TABLE IF EXISTS users CASCADE;")
+    op.execute("DROP TABLE IF EXISTS products CASCADE;")
+    op.execute("DROP TABLE IF EXISTS debtors CASCADE;")
+    op.execute("DROP TABLE IF EXISTS daily_summaries CASCADE;")
+    op.execute("DROP TABLE IF EXISTS accounting_cycles CASCADE;")
+    op.execute("DROP TABLE IF EXISTS businesses CASCADE;")
 
     # 6. Drop enums
     op.execute("DROP TYPE IF EXISTS payment_type;")

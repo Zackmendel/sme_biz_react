@@ -90,28 +90,28 @@ with a role.
 
 **Backend**
 
-- [ ] `app/auth/dependencies.py` — verify `Authorization: Bearer <jwt>`,
+- [x] `app/auth/dependencies.py` — verify `Authorization: Bearer <jwt>`,
   expose `get_current_user` (resolves both `auth.users` identity and the
   linked `users`/`business_id` row)
-- [ ] Reject missing/expired tokens with `401` before any query or chat work. New users are automatically assigned a viewers role.
+- [x] Reject missing/expired tokens with `401` before any query or chat work. New users are automatically assigned a viewers role.
 
 **Frontend**
 
-- [ ] Scaffold Vite + React + TypeScript + Tailwind + shadcn
+- [x] Scaffold Vite + React + TypeScript + Tailwind + shadcn
   ([frontend-setup](guides/frontend-setup.md))
-- [ ] `src/lib/env.ts`, `src/lib/supabase.ts`, `src/lib/http.ts` +
+- [x] `src/lib/env.ts`, `src/lib/supabase.ts`, `src/lib/http.ts` +
   `src/lib/api.ts` (same shape as the reference template)
-- [ ] Sign-up / sign-in pages (email only)
-- [ ] **Onboarding gate**: a signed-in user with no `business_id` is routed
+- [x] Sign-up / sign-in pages (email only)
+- [x] **Onboarding gate**: a signed-in user with no `business_id` is routed
   to a business-setup flow (name, owner name, description, industry,
   scale, city, address, phone, email, proof-of-business upload to Supabase
   Storage) before anything else — mirrors the existing Streamlit app's
   `show_onboarding_screen` gatekeeper pattern
-- [ ] Product/item list setup screen (name, default price, unit, category)
+- [x] Product/item list setup screen (name, default price, unit, category)
   — required before Sales/Purchases can be used meaningfully
-- [ ] Staff invite + role assignment screen (owner/admin only)
-- [ ] Protected routes — redirect unauthenticated or un-onboarded users
-- [ ] Verify: sign up → onboard a business → add a product → see it appear
+- [x] Staff invite + role assignment screen (owner/admin only)
+- [x] Protected routes — redirect unauthenticated or un-onboarded users
+- [x] Verify: sign up → onboard a business → add a product → see it appear
   for a second staff account scoped to the same `business_id`
 
 ---
