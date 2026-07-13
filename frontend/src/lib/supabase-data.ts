@@ -392,6 +392,98 @@ export async function createPurchase(
   return data as Purchase;
 }
 
+// ---- Daily Summaries ----
+
+export interface DailySummary {
+  id: string;
+  business_id: string;
+  summary_date: string;
+  total_sales: number;
+  total_purchases: number;
+  net: number;
+  transaction_count: number;
+  unique_customers: number;
+  top_item: string | null;
+  updated_at: string;
+}
+
+/**
+ * Fetch all daily summaries for a business.
+ */
+export async function fetchDailySummaries(
+  businessId: string
+): Promise<DailySummary[]> {
+  const { data, error } = await supabase
+    .from("daily_summaries")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("summary_date", { ascending: true });
+
+  if (error) throw error;
+  return data as DailySummary[];
+}
+
+// ---- Debtors ----
+
+export interface Debtor {
+  id: number;
+  business_id: string;
+  customer_name: string;
+  amount: number; // stored as bigint kobo in database
+  is_paid: boolean;
+  paid_at: string | null;
+  created_at: string;
+}
+
+/**
+ * Fetch all debtors for a business.
+ */
+export async function fetchDebtors(businessId: string): Promise<Debtor[]> {
+  const { data, error } = await supabase
+    .from("debtors")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data as Debtor[];
+}
+
+/**
+ * Log a new debtor.
+ */
+export async function createDebtor(
+  debtor: Omit<Debtor, "id" | "is_paid" | "paid_at" | "created_at">
+): Promise<Debtor> {
+  const { data, error } = await supabase
+    .from("debtors")
+    .insert(debtor)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Debtor;
+}
+
+/**
+ * Mark a debtor as paid.
+ */
+export async function markDebtorPaid(debtorId: number): Promise<Debtor> {
+  const { data, error } = await supabase
+    .from("debtors")
+    .update({
+      is_paid: true,
+      paid_at: new Date().toISOString(),
+    })
+    .eq("id", debtorId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Debtor;
+}
+
+
 
 
 

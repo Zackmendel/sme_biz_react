@@ -146,18 +146,18 @@ Goal: the core daily-use loop — the reason the app exists.
 Goal: fast, pre-aggregated reporting that neither the dashboard nor the AI
 has to compute by scanning raw transactions.
 
-- [ ] `daily_summaries` upsert trigger fires on every `sales`/`purchases`
+- [x] `daily_summaries` upsert trigger fires on every `sales`/`purchases`
   write for the affected `business_id` + date (same pattern as the
   reference template's per-write materialized summary, just recalculating
   ledger totals instead of chunk counts)
-- [ ] Debtors screen: add/view debtors, mark paid (`debtors` table — a
+- [x] Debtors screen: add/view debtors, mark paid (`debtors` table — a
   distinct notion from purchases/vendors)
-- [ ] Dashboard: total income, total expenditure, net, transaction count,
+- [x] Dashboard: total income, total expenditure, net, transaction count,
   unique customers, top item, income-vs-expenditure chart (Recharts),
   reading `daily_summaries` directly from Supabase
-- [ ] Cycle filter (daily/weekly/monthly/quarterly/yearly) aggregating
+- [x] Cycle filter (daily/weekly/monthly/quarterly/yearly) aggregating
   across `daily_summaries` rows for weekly+ views
-- [ ] Verify: dashboard loads in under 2 seconds with a nontrivial number of
+- [x] Verify: dashboard loads in under 2 seconds with a nontrivial number of
   seeded transactions; changing the date filter never triggers a raw
   `sales`/`purchases` table scan
 

@@ -7,8 +7,11 @@ import { OnboardingPage } from "@/pages/onboarding";
 import { ProductsPage } from "@/pages/products";
 import { StaffPage } from "@/pages/staff";
 import { LedgerPage } from "@/pages/ledger";
+import { DashboardPage } from "@/pages/dashboard";
+import { DebtorsPage } from "@/pages/debtors";
+import { DailyReportPage } from "@/pages/daily-report";
 import { useAuth } from "@/components/auth/auth-context";
-import { TrendingUp, Package, Users, LogOut, Home, ShoppingCart } from "lucide-react";
+import { TrendingUp, Package, Users, LogOut, Home, ShoppingCart, AlertCircle, ClipboardList } from "lucide-react";
 
 function Layout() {
   const { profile, signOut } = useAuth();
@@ -18,6 +21,8 @@ function Layout() {
     { label: "Dashboard", path: "/", icon: Home },
     { label: "Ledger", path: "/ledger", icon: ShoppingCart },
     { label: "Products", path: "/products", icon: Package },
+    { label: "Debtors", path: "/debtors", icon: AlertCircle },
+    { label: "Daily Report", path: "/daily-report", icon: ClipboardList },
     { label: "Staff & Roles", path: "/staff", icon: Users },
   ];
 
@@ -95,10 +100,11 @@ export function App() {
       {/* Protected routes — AuthGuard redirects to sign-in or onboarding */}
       <Route element={<AuthGuard />}>
         <Route element={<Layout />}>
-          {/* Dashboard Placeholder (Phase 4) — redirects to ledger for now */}
-          <Route path="/" element={<Navigate to="/ledger" replace />} />
+          <Route path="/" element={<DashboardPage />} />
           <Route path="/ledger" element={<LedgerPage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/debtors" element={<DebtorsPage />} />
+          <Route path="/daily-report" element={<DailyReportPage />} />
           <Route path="/staff" element={<StaffPage />} />
         </Route>
       </Route>
