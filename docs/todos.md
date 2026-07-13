@@ -51,33 +51,35 @@ and RLS enforced.
 - [x] Init backend deps and project layout ([backend-setup](guides/backend-setup.md))
 - [x] `app/config.py` — settings module, fail fast on missing env vars
 - [x] `app/main.py` — FastAPI app, CORS, health check (`GET /health`)
-- [ ] SQLAlchemy models in `app/database/models/`, one per table in
+- [x] SQLAlchemy models in `app/database/models/`, one per table in
   [`docs/schema.sql`](../docs/schema.sql):
-  - [ ] `businesses`
-  - [ ] `users`
-  - [ ] `products`
-  - [ ] `accounting_cycles`
-  - [ ] `sales`
-  - [ ] `purchases`
-  - [ ] `debtors`
-  - [ ] `daily_summaries`
-  - [ ] `audit_trail`
-- [ ] Alembic init + first migration covering all of `docs/schema.sql`:
-  - [ ] All enums (`nigeria_city_list`, `business_industry`,
+  - [x] `businesses`
+  - [x] `users`
+  - [x] `products`
+  - [x] `accounting_cycles`
+  - [x] `sales`
+  - [x] `purchases`
+  - [x] `debtors`
+  - [x] `daily_summaries`
+  - [x] `audit_trail`
+- [x] Check the backend/app/database/models to if the models will work well when deployed on Supabase. For example the user model will depend on the auth.users table, creating a new user means that a new user needs to be created in the users table, if there is a logic issue between them, like UUID not set to be generated at random or date is not automatically set to the current date, it will cause issues in the integration with the frontend down the line. 
+- [x] Alembic init + first migration covering all of `docs/schema.sql`:
+  - [x] All enums (`nigeria_city_list`, `business_industry`,
     `business_scale`, `role_enum`, `status_enum`, `period_enum`,
     `payment_type`)
-  - [ ] `pg_trgm` extension + trigram indexes on `businesses.name`
-  - [ ] `handle_new_user()` function + `on_auth_user_created` trigger
-  - [ ] RLS enabled + policies on every table (owner/admin/staff/viewer
+  - [x] `pg_trgm` extension + trigram indexes on `businesses.name`
+  - [x] `handle_new_user()` function + `on_auth_user_created` trigger
+  - [x] RLS enabled + policies on every table (owner/admin/staff/viewer
     scoped to `business_id`, `viewer` read-only, `staff` cannot edit/delete
     per the Admin Privileges table in the PRD)
-  - [ ] `daily_summaries` upsert trigger on `sales`/`purchases`
+  - [x] `daily_summaries` upsert trigger on `sales`/`purchases`
     insert/update/delete (see Phase 4)
-  - [ ] `audit_trail` write trigger, **INSERT-only RLS policy** (no
+  - [x] `audit_trail` write trigger, **INSERT-only RLS policy** (no
     UPDATE/DELETE for any role including service role)
-- [ ] `uv run alembic upgrade head` against the new Supabase project
-- [ ] `app/database/supabase.py` — user-scoped and service-role clients
-- [ ] Verify: `uv run uvicorn app.main:app --reload` → health check 200
+  - [x] verify that all the above triggers, indexes and policies work as expected and will not clash when it is to be implemented with the frontend.
+- [x] `uv run alembic upgrade head` against the new Supabase project
+- [x] `app/database/supabase.py` — user-scoped and service-role clients
+- [x] Verify: `uv run uvicorn app.main:app --reload` → health check 200
 
 ---
 
@@ -91,7 +93,7 @@ with a role.
 - [ ] `app/auth/dependencies.py` — verify `Authorization: Bearer <jwt>`,
   expose `get_current_user` (resolves both `auth.users` identity and the
   linked `users`/`business_id` row)
-- [ ] Reject missing/expired tokens with `401` before any query or chat work
+- [ ] Reject missing/expired tokens with `401` before any query or chat work. New users are automatically assigned a viewers role.
 
 **Frontend**
 
