@@ -213,24 +213,24 @@ in their own recorded data — no invented figures, ever.
 
 Goal: the automated end-of-day and end-of-cycle pipeline.
 
-- [ ] `app/analytics/aggregator.py` — nightly job logic: aggregate the
+- [x] `app/analytics/aggregator.py` — nightly job logic: aggregate the
   day's transactions, evaluate net position, roll deficits into
   `debts_accrued`, upsert `daily_summaries`
-- [ ] Cycle-close logic: when a cycle's `end_date` passes, close it, carry
+- [x] Cycle-close logic: when a cycle's `end_date` passes, close it, carry
   the balance/debt forward into a newly opened cycle of the same
   `period_type`
-- [ ] `app/reporting/pdf.py` — WeasyPrint templated PDF (business name,
+- [x] `app/reporting/pdf.py` — WeasyPrint templated PDF (business name,
   logo, period summary) — prefer this over screenshot-to-PDF per the PRD
-- [ ] Gemini-generated narrative summary built **only** from
+- [x] Gemini-generated narrative summary built **only** from
   `daily_summaries`/`accounting_cycles` rows, never raw transaction dumps
   (token-cost control, per the PRD's own reasoning)
-- [ ] `app/reporting/telegram.py` — deliver narrative + PDF via the
+- [x] `app/reporting/telegram.py` — deliver narrative + PDF via the
   Telegram Bot API to the business's configured chat ID
-- [ ] Secured FastAPI endpoints for Cloud Scheduler to call (nightly
+- [x] Secured FastAPI endpoints for Cloud Scheduler to call (nightly
   aggregation, cycle close)
-- [ ] Retry policy: automated delivery retried up to 3 times on failure,
+- [x] Retry policy: automated delivery retried up to 3 times on failure,
   owner notified if all retries fail
-- [ ] Verify: manually trigger the endpoint against seeded data, confirm a
+- [x] Verify: manually trigger the endpoint against seeded data, confirm a
   Telegram message + PDF arrive with correct figures
 
 ---

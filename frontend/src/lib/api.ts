@@ -47,3 +47,26 @@ export async function createChatThread(title?: string): Promise<ChatThread> {
 export async function fetchChatHistory(threadId: string): Promise<ChatMessage[]> {
   return http<ChatMessage[]>(`/chat/threads/${threadId}/history`);
 }
+
+export interface TriggerDailyResponse {
+  status: string;
+  date: string;
+  daily_summaries_count: number;
+  closed_cycles_count: number;
+  reports_sent: Array<{
+    business_id: string;
+    business_name: string;
+    period: string;
+    delivered: boolean;
+  }>;
+}
+
+export async function triggerDailyAggregation(targetDate?: string): Promise<TriggerDailyResponse> {
+  const url = targetDate ? `/reports/trigger-daily?target_date=${targetDate}` : "/reports/trigger-daily";
+  return http<TriggerDailyResponse>(url, {
+    method: "POST",
+    headers: {
+      "X-Scheduler-Token": "dev-scheduler-token",
+    },
+  });
+}

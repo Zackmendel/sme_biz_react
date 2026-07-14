@@ -296,6 +296,24 @@ export async function createAccountingCycle(
   return data as AccountingCycle;
 }
 
+/**
+ * Update an accounting cycle.
+ */
+export async function updateAccountingCycle(
+  cycleId: string,
+  updates: Partial<AccountingCycle>
+): Promise<AccountingCycle> {
+  const { data, error } = await supabase
+    .from("accounting_cycles")
+    .update(updates)
+    .eq("id", cycleId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as AccountingCycle;
+}
+
 // ---- Sales Ledger ----
 
 export interface Sale {

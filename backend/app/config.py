@@ -26,10 +26,12 @@ class Settings(BaseSettings):
 
     # Telegram configuration
     TELEGRAM_BOT_TOKEN: str
+    TELEGRAM_CHAT_ID: str | None = None
 
     # Server / CORS config
     PORT: int = 8000
-    ALLOWED_ORIGINS: str = "http://localhost:5173"
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    SCHEDULER_API_TOKEN: str = "dev-scheduler-token"
 
     @property
     def cors_origins(self) -> List[str]:

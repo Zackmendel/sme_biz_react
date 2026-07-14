@@ -3,6 +3,7 @@ import { useAuth } from "@/components/auth/auth-context";
 import {
   fetchOpenCycles,
   createAccountingCycle,
+  updateAccountingCycle,
   fetchProducts,
   fetchSales,
   fetchPurchases,
@@ -13,7 +14,8 @@ import {
   type Sale,
   type Purchase,
 } from "@/lib/supabase-data";
-import { Loader2, Calendar, AlertCircle, ShoppingCart, ShoppingBag, Filter } from "lucide-react";
+import { triggerDailyAggregation } from "@/lib/api";
+import { Loader2, Calendar, AlertCircle, ShoppingCart, ShoppingBag, Filter, Settings, Edit3, X, Check } from "lucide-react";
 
 export function LedgerPage() {
   const { profile, user } = useAuth();
@@ -61,6 +63,56 @@ export function LedgerPage() {
   const [filterEndDate, setFilterEndDate] = useState("");
 
   const businessId = profile?.business_id;
+  const isOwnerOrAdmin = profile?.role && ["owner", "admin"].includes(profile.role);
+
+  // States for cycle closing and adjustment
+  const [closing, setClosing] = useState(false);
+  const [closingStatus, setClosingStatus] = useState<string | null>(null);
+  const [adjustingCycleId, setAdjustingCycleId] = useState<string | null>(null);
+  const [adjustStartDate, setAdjustStartDate] = useState("");
+  const [adjustEndDate, setAdjustEndDate] = useState("");
+
+  const handleCloseCycleEarly = async (cycle: AccountingCycle) => {
+    if (!isOwnerOrAdmin) return;
+    setClosing(true);
+    setClosingStatus("Closing cycle and carrying forward balances...");
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+      // 1. Force the cycle's end_date to be today (so the EOD aggregator closes it)
+      await updateAccountingCycle(cycle.id, { end_date: todayStr });
+      
+      // 2. Call backend reports generator
+      await triggerDailyAggregation(todayStr);
+      
+      setClosingStatus("Success! Accounting cycle closed. Narrative & PDF reports delivered.");
+      // 3. Reload everything
+      await loadData();
+    } catch (err: unknown) {
+      console.error(err);
+      setError("Failed to close accounting cycle early.");
+    } finally {
+      setClosing(false);
+      setTimeout(() => setClosingStatus(null), 5000);
+    }
+  };
+
+  const handleUpdateCycleDates = async (cycleId: string) => {
+    if (!isOwnerOrAdmin) return;
+    setSubmitting(true);
+    try {
+      await updateAccountingCycle(cycleId, {
+        start_date: adjustStartDate,
+        end_date: adjustEndDate,
+      });
+      setAdjustingCycleId(null);
+      await loadData();
+    } catch (err: unknown) {
+      console.error(err);
+      setError("Failed to update cycle dates.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const loadData = async () => {
     if (!businessId) return;
@@ -294,7 +346,6 @@ export function LedgerPage() {
   });
 
   // Roles permissions
-  const isOwnerOrAdmin = profile?.role && ["owner", "admin"].includes(profile.role);
   const canLog = profile?.role && ["owner", "admin", "staff"].includes(profile.role);
 
   if (loading) {
@@ -758,6 +809,119 @@ export function LedgerPage() {
                 Submit Purchase
               </button>
             </form>
+          )}
+        </div>
+
+        {/* Accounting Cycle Control Card */}
+        <div className="rounded-xl border border-border bg-card p-6 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+            <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+              <Settings className="h-4 w-4 text-primary" />
+              Accounting Cycle Control
+            </h3>
+            {openCycles[0] && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary capitalize">
+                {openCycles[0].period_type}
+              </span>
+            )}
+          </div>
+
+          {openCycles.map((cycle) => (
+            <div key={cycle.id} className="space-y-3 text-sm">
+              {adjustingCycleId === cycle.id ? (
+                <div className="space-y-2 border border-primary/20 bg-primary/5 p-3 rounded-lg">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Start Date</label>
+                      <input
+                        type="date"
+                        value={adjustStartDate}
+                        onChange={(e) => setAdjustStartDate(e.target.value)}
+                        className="flex h-8 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">End Date</label>
+                      <input
+                        type="date"
+                        value={adjustEndDate}
+                        onChange={(e) => setAdjustEndDate(e.target.value)}
+                        className="flex h-8 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-1.5 pt-1">
+                    <button
+                      onClick={() => setAdjustingCycleId(null)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded border border-border text-muted-foreground hover:bg-secondary/50"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleUpdateCycleDates(cycle.id)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded bg-primary text-primary-foreground hover:bg-primary/95"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-secondary/20 border border-border/40 p-4 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-muted-foreground">Active Period:</span>
+                    {isOwnerOrAdmin && (
+                      <button
+                        onClick={() => {
+                          setAdjustingCycleId(cycle.id);
+                          setAdjustStartDate(cycle.start_date);
+                          setAdjustEndDate(cycle.end_date);
+                        }}
+                        className="text-primary hover:underline flex items-center gap-1 text-[11px]"
+                      >
+                        <Edit3 className="h-3 w-3" /> Edit Dates
+                      </button>
+                    )}
+                  </div>
+                  <p className="font-medium text-foreground">
+                    {new Date(cycle.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {" — "}
+                    {new Date(cycle.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs text-muted-foreground">
+                    <div>
+                      <span>Brought Forward:</span>
+                      <p className="font-semibold text-foreground">₦{Number(cycle.balance_brought_forward).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <span>Accrued Debts:</span>
+                      <p className="font-semibold text-foreground text-destructive">₦{Number(cycle.debts_accrued).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isOwnerOrAdmin && (
+                <button
+                  onClick={() => {
+                    if (confirm("Are you sure you want to end this accounting cycle now and generate reports? This rolls balances forward to a new cycle.")) {
+                      handleCloseCycleEarly(cycle);
+                    }
+                  }}
+                  disabled={closing}
+                  className="w-full flex h-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive border border-destructive/20 font-medium hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50 transition-all text-xs"
+                >
+                  {closing ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                  End Cycle & Generate Report
+                </button>
+              )}
+            </div>
+          ))}
+
+          {closingStatus && (
+            <div className="text-xs text-primary flex items-center gap-1.5 bg-primary/10 border border-primary/20 p-3 rounded-lg animate-pulse">
+              <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+              <span>{closingStatus}</span>
+            </div>
           )}
         </div>
       </div>
