@@ -20,8 +20,9 @@ auth_users = Table(
     "users",
     Base.metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    schema="auth"
+    schema="auth",
 )
+
 
 class User(Base):
     __tablename__ = "users"
@@ -40,13 +41,19 @@ class User(Base):
     first_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     last_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     role: Mapped[RoleEnum] = mapped_column(
-        Enum(RoleEnum, name="role_enum"),
+        Enum(
+            RoleEnum, name="role_enum", values_callable=lambda x: [e.value for e in x]
+        ),
         nullable=False,
         default=RoleEnum.VIEWER,
         server_default=text("'viewer'"),
     )
     status: Mapped[Optional[StatusEnum]] = mapped_column(
-        Enum(StatusEnum, name="status_enum"),
+        Enum(
+            StatusEnum,
+            name="status_enum",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=True,
     )
     is_active: Mapped[bool] = mapped_column(
@@ -61,7 +68,13 @@ class User(Base):
         server_default=text("now()"),
     )
 
-    business: Mapped[Optional["Business"]] = relationship("Business", back_populates="users")
+    business: Mapped[Optional["Business"]] = relationship(
+        "Business", back_populates="users"
+    )
     sales: Mapped[List["Sale"]] = relationship("Sale", back_populates="user")
-    purchases: Mapped[List["Purchase"]] = relationship("Purchase", back_populates="user")
-    audit_trails: Mapped[List["AuditTrail"]] = relationship("AuditTrail", back_populates="user")
+    purchases: Mapped[List["Purchase"]] = relationship(
+        "Purchase", back_populates="user"
+    )
+    audit_trails: Mapped[List["AuditTrail"]] = relationship(
+        "AuditTrail", back_populates="user"
+    )

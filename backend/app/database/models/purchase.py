@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.database.models.accounting_cycle import AccountingCycle
     from app.database.models.product import Product
 
+
 class Purchase(Base):
     __tablename__ = "purchases"
 
@@ -60,5 +61,9 @@ class Purchase(Base):
 
     business: Mapped["Business"] = relationship("Business", back_populates="purchases")
     user: Mapped["User"] = relationship("User", back_populates="purchases")
-    accounting_cycle: Mapped["AccountingCycle"] = relationship("AccountingCycle", back_populates="purchases")
-    product: Mapped[Optional["Product"]] = relationship("Product", back_populates="purchases")
+    accounting_cycle: Mapped["AccountingCycle"] = relationship(
+        "AccountingCycle", back_populates="purchases"
+    )
+    product: Mapped[Optional["Product"]] = relationship(
+        "Product", back_populates="purchases"
+    )

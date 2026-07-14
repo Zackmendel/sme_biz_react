@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class NigeriaCityList(str, Enum):
     MINNA = "Minna"
     SULEJA = "Suleja"
@@ -21,6 +22,7 @@ class NigeriaCityList(str, Enum):
     JOS = "Jos"
     ILORIN = "Ilorin"
 
+
 class BusinessIndustry(str, Enum):
     RETAIL = "retail"
     FOOD_SERVICES = "food_services"
@@ -28,11 +30,13 @@ class BusinessIndustry(str, Enum):
     DISTRIBUTORS = "distributors"
     IT = "IT"
 
+
 class BusinessScale(str, Enum):
     SOLE_TRADER = "sole_trader"
     MICRO = "micro"
     SMALL = "small"
     MEDIUM = "medium"
+
 
 class RoleEnum(str, Enum):
     OWNER = "owner"
@@ -40,11 +44,13 @@ class RoleEnum(str, Enum):
     STAFF = "staff"
     VIEWER = "viewer"
 
+
 class StatusEnum(str, Enum):
     PERMANENT = "permanent"
     PART_TIME = "part_time"
     INTERN = "intern"
     CONTRACT = "contract"
+
 
 class PeriodEnum(str, Enum):
     DAILY = "daily"
@@ -52,6 +58,7 @@ class PeriodEnum(str, Enum):
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     YEARLY = "yearly"
+
 
 class PaymentType(str, Enum):
     CASH = "cash"

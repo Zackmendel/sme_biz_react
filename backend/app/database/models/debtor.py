@@ -9,6 +9,7 @@ from app.database.models.base import Base
 if TYPE_CHECKING:
     from app.database.models.business import Business
 
+
 class Debtor(Base):
     __tablename__ = "debtors"
 

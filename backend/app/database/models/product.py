@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.database.models.sale import Sale
     from app.database.models.purchase import Purchase
 
+
 class Product(Base):
     __tablename__ = "products"
 
@@ -40,4 +41,6 @@ class Product(Base):
 
     business: Mapped["Business"] = relationship("Business", back_populates="products")
     sales: Mapped[List["Sale"]] = relationship("Sale", back_populates="product")
-    purchases: Mapped[List["Purchase"]] = relationship("Purchase", back_populates="product")
+    purchases: Mapped[List["Purchase"]] = relationship(
+        "Purchase", back_populates="product"
+    )

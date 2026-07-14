@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.database.models.business import Business
     from app.database.models.user import User
 
+
 class AuditTrail(Base):
     __tablename__ = "audit_trail"
 
@@ -39,5 +40,7 @@ class AuditTrail(Base):
         server_default=text("now()"),
     )
 
-    business: Mapped["Business"] = relationship("Business", back_populates="audit_trails")
+    business: Mapped["Business"] = relationship(
+        "Business", back_populates="audit_trails"
+    )
     user: Mapped[Optional["User"]] = relationship("User", back_populates="audit_trails")

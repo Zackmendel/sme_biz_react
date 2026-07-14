@@ -2,7 +2,16 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Date, Integer, Numeric, String, ForeignKey, DateTime, text, UniqueConstraint
+from sqlalchemy import (
+    Date,
+    Integer,
+    Numeric,
+    String,
+    ForeignKey,
+    DateTime,
+    text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.models.base import Base
@@ -10,10 +19,15 @@ from app.database.models.base import Base
 if TYPE_CHECKING:
     from app.database.models.business import Business
 
+
 class DailySummary(Base):
     __tablename__ = "daily_summaries"
     __table_args__ = (
-        UniqueConstraint("business_id", "summary_date", name="daily_summaries_business_id_summary_date_key"),
+        UniqueConstraint(
+            "business_id",
+            "summary_date",
+            name="daily_summaries_business_id_summary_date_key",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -64,4 +78,6 @@ class DailySummary(Base):
         server_default=text("now()"),
     )
 
-    business: Mapped["Business"] = relationship("Business", back_populates="daily_summaries")
+    business: Mapped["Business"] = relationship(
+        "Business", back_populates="daily_summaries"
+    )

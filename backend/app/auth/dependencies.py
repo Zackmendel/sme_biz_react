@@ -10,9 +10,10 @@ from app.database.models.user import User
 # Standard HTTPBearer dependency
 security = HTTPBearer()
 
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> User:
     """
     Dependency to verify the Supabase JWT access token and return the linked public.users row.
@@ -21,7 +22,9 @@ async def get_current_user(
     token = credentials.credentials
     try:
         # Verify the JWT token using the Supabase auth API (via supabase client get_user)
-        supabase_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
+        supabase_client = create_client(
+            settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY
+        )
         response = supabase_client.auth.get_user(token)
         if not response or not response.user:
             raise HTTPException(

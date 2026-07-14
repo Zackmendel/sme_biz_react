@@ -1,10 +1,11 @@
 """initial accounting schema
 
 Revision ID: a6471baebfe9
-Revises: 
+Revises:
 Create Date: 2026-07-13 12:23:46.997507
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,7 +13,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'a6471baebfe9'
+revision: str = "a6471baebfe9"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,163 +25,398 @@ def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
 
     # 2. Create tables
-    op.create_table('businesses',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('owner_name', sa.String(), nullable=True),
-    sa.Column('description', sa.String(), nullable=True),
-    sa.Column('industry', sa.Enum('retail', 'food_services', 'services', 'distributors', 'IT', name='business_industry'), nullable=False),
-    sa.Column('scale', sa.Enum('sole_trader', 'micro', 'small', 'medium', name='business_scale'), nullable=False),
-    sa.Column('phone', sa.String(), nullable=True),
-    sa.Column('email', sa.String(), nullable=True),
-    sa.Column('city', sa.Enum('Minna', 'Suleja', 'Bida', 'Kontagora', 'Lapai', 'Mokwa', 'New Bussa', 'Agaie', 'Paiko', 'Kagara', 'Lagos', 'Abuja', 'Port Harcourt', 'Kano', 'Ibadan', 'Enugu', 'Kaduna', 'Jos', 'Ilorin', name='nigeria_city_list'), nullable=False),
-    sa.Column('address', sa.String(), nullable=True),
-    sa.Column('proof_url', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    op.create_table(
+        "businesses",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("owner_name", sa.String(), nullable=True),
+        sa.Column("description", sa.String(), nullable=True),
+        sa.Column(
+            "industry",
+            sa.Enum(
+                "retail",
+                "food_services",
+                "services",
+                "distributors",
+                "IT",
+                name="business_industry",
+            ),
+            nullable=False,
+        ),
+        sa.Column(
+            "scale",
+            sa.Enum("sole_trader", "micro", "small", "medium", name="business_scale"),
+            nullable=False,
+        ),
+        sa.Column("phone", sa.String(), nullable=True),
+        sa.Column("email", sa.String(), nullable=True),
+        sa.Column(
+            "city",
+            sa.Enum(
+                "Minna",
+                "Suleja",
+                "Bida",
+                "Kontagora",
+                "Lapai",
+                "Mokwa",
+                "New Bussa",
+                "Agaie",
+                "Paiko",
+                "Kagara",
+                "Lagos",
+                "Abuja",
+                "Port Harcourt",
+                "Kano",
+                "Ibadan",
+                "Enugu",
+                "Kaduna",
+                "Jos",
+                "Ilorin",
+                name="nigeria_city_list",
+            ),
+            nullable=False,
+        ),
+        sa.Column("address", sa.String(), nullable=True),
+        sa.Column("proof_url", sa.String(), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
     )
-    op.create_table('accounting_cycles',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('period_type', sa.Enum('daily', 'weekly', 'monthly', 'quarterly', 'yearly', name='period_enum'), nullable=False),
-    sa.Column('start_date', sa.Date(), nullable=False),
-    sa.Column('end_date', sa.Date(), nullable=False),
-    sa.Column('balance_brought_forward', sa.Numeric(precision=14, scale=2), server_default=sa.text('0'), nullable=False),
-    sa.Column('debts_accrued', sa.Numeric(precision=14, scale=2), server_default=sa.text('0'), nullable=False),
-    sa.Column('is_closed', sa.Boolean(), server_default=sa.text('false'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "accounting_cycles",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column(
+            "period_type",
+            sa.Enum(
+                "daily", "weekly", "monthly", "quarterly", "yearly", name="period_enum"
+            ),
+            nullable=False,
+        ),
+        sa.Column("start_date", sa.Date(), nullable=False),
+        sa.Column("end_date", sa.Date(), nullable=False),
+        sa.Column(
+            "balance_brought_forward",
+            sa.Numeric(precision=14, scale=2),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
+            "debts_accrued",
+            sa.Numeric(precision=14, scale=2),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
+            "is_closed", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table('daily_summaries',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('summary_date', sa.Date(), nullable=False),
-    sa.Column('total_sales', sa.Numeric(precision=14, scale=2), server_default=sa.text('0'), nullable=False),
-    sa.Column('total_purchases', sa.Numeric(precision=14, scale=2), server_default=sa.text('0'), nullable=False),
-    sa.Column('net', sa.Numeric(precision=14, scale=2), server_default=sa.text('0'), nullable=False),
-    sa.Column('transaction_count', sa.Integer(), server_default=sa.text('0'), nullable=False),
-    sa.Column('unique_customers', sa.Integer(), server_default=sa.text('0'), nullable=False),
-    sa.Column('top_item', sa.String(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('business_id', 'summary_date', name='daily_summaries_business_id_summary_date_key')
+    op.create_table(
+        "daily_summaries",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column("summary_date", sa.Date(), nullable=False),
+        sa.Column(
+            "total_sales",
+            sa.Numeric(precision=14, scale=2),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
+            "total_purchases",
+            sa.Numeric(precision=14, scale=2),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
+            "net",
+            sa.Numeric(precision=14, scale=2),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
+            "transaction_count",
+            sa.Integer(),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
+            "unique_customers",
+            sa.Integer(),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column("top_item", sa.String(), nullable=True),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "business_id",
+            "summary_date",
+            name="daily_summaries_business_id_summary_date_key",
+        ),
     )
-    op.create_table('debtors',
-    sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('customer_name', sa.String(), nullable=False),
-    sa.Column('amount', sa.BigInteger(), nullable=False),
-    sa.Column('is_paid', sa.Boolean(), server_default=sa.text('false'), nullable=False),
-    sa.Column('paid_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "debtors",
+        sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column("customer_name", sa.String(), nullable=False),
+        sa.Column("amount", sa.BigInteger(), nullable=False),
+        sa.Column(
+            "is_paid", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.Column("paid_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table('products',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.Column('default_price', sa.Numeric(precision=12, scale=2), nullable=False),
-    sa.Column('unit', sa.String(), nullable=True),
-    sa.Column('category', sa.String(), nullable=True),
-    sa.Column('is_archived', sa.Boolean(), server_default=sa.text('false'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "products",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("default_price", sa.Numeric(precision=12, scale=2), nullable=False),
+        sa.Column("unit", sa.String(), nullable=True),
+        sa.Column("category", sa.String(), nullable=True),
+        sa.Column(
+            "is_archived", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table('users',
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=True),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('first_name', sa.String(), nullable=True),
-    sa.Column('last_name', sa.String(), nullable=True),
-    sa.Column('role', sa.Enum('owner', 'admin', 'staff', 'viewer', name='role_enum'), server_default=sa.text("'viewer'"), nullable=False),
-    sa.Column('status', sa.Enum('permanent', 'part_time', 'intern', 'contract', name='status_enum'), nullable=True),
-    sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['id'], ['auth.users.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    op.create_table(
+        "users",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("business_id", sa.UUID(), nullable=True),
+        sa.Column("email", sa.String(), nullable=False),
+        sa.Column("first_name", sa.String(), nullable=True),
+        sa.Column("last_name", sa.String(), nullable=True),
+        sa.Column(
+            "role",
+            sa.Enum("owner", "admin", "staff", "viewer", name="role_enum"),
+            server_default=sa.text("'viewer'"),
+            nullable=False,
+        ),
+        sa.Column(
+            "status",
+            sa.Enum("permanent", "part_time", "intern", "contract", name="status_enum"),
+            nullable=True,
+        ),
+        sa.Column(
+            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["id"], ["auth.users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
     )
-    op.create_table('audit_trail',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.UUID(), nullable=True),
-    sa.Column('table_name', sa.String(), nullable=False),
-    sa.Column('record_id', sa.UUID(), nullable=False),
-    sa.Column('action', sa.String(), nullable=False),
-    sa.Column('before_value', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('after_value', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('changed_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "audit_trail",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=True),
+        sa.Column("table_name", sa.String(), nullable=False),
+        sa.Column("record_id", sa.UUID(), nullable=False),
+        sa.Column("action", sa.String(), nullable=False),
+        sa.Column(
+            "before_value", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
+        sa.Column(
+            "after_value", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
+        sa.Column(
+            "changed_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table('purchases',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('cycle_id', sa.UUID(), nullable=False),
-    sa.Column('product_id', sa.UUID(), nullable=True),
-    sa.Column('item_name', sa.String(), nullable=False),
-    sa.Column('vendor_details', sa.String(), nullable=True),
-    sa.Column('quantity', sa.Numeric(precision=12, scale=2), nullable=False),
-    sa.Column('price_per_unit', sa.Numeric(precision=12, scale=2), nullable=False),
-    sa.Column('total', sa.Numeric(precision=14, scale=2), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_flagged', sa.Boolean(), server_default=sa.text('false'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['cycle_id'], ['accounting_cycles.id'], ),
-    sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "purchases",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("cycle_id", sa.UUID(), nullable=False),
+        sa.Column("product_id", sa.UUID(), nullable=True),
+        sa.Column("item_name", sa.String(), nullable=False),
+        sa.Column("vendor_details", sa.String(), nullable=True),
+        sa.Column("quantity", sa.Numeric(precision=12, scale=2), nullable=False),
+        sa.Column("price_per_unit", sa.Numeric(precision=12, scale=2), nullable=False),
+        sa.Column("total", sa.Numeric(precision=14, scale=2), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "is_flagged", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["cycle_id"],
+            ["accounting_cycles.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["product_id"],
+            ["products.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table('sales',
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
-    sa.Column('business_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('cycle_id', sa.UUID(), nullable=False),
-    sa.Column('product_id', sa.UUID(), nullable=True),
-    sa.Column('item_name', sa.String(), nullable=False),
-    sa.Column('customer_details', sa.String(), nullable=True),
-    sa.Column('quantity', sa.Numeric(precision=12, scale=2), nullable=False),
-    sa.Column('price_per_unit', sa.Numeric(precision=12, scale=2), nullable=False),
-    sa.Column('discount', sa.Numeric(precision=12, scale=2), server_default=sa.text('0'), nullable=False),
-    sa.Column('total', sa.Numeric(precision=14, scale=2), nullable=False),
-    sa.Column('payment_type', sa.Enum('cash', 'transfer', 'card', 'credit', name='payment_type'), server_default=sa.text("'cash'"), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('is_flagged', sa.Boolean(), server_default=sa.text('false'), nullable=False),
-    sa.ForeignKeyConstraint(['business_id'], ['businesses.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['cycle_id'], ['accounting_cycles.id'], ),
-    sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "sales",
+        sa.Column(
+            "id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False
+        ),
+        sa.Column("business_id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("cycle_id", sa.UUID(), nullable=False),
+        sa.Column("product_id", sa.UUID(), nullable=True),
+        sa.Column("item_name", sa.String(), nullable=False),
+        sa.Column("customer_details", sa.String(), nullable=True),
+        sa.Column("quantity", sa.Numeric(precision=12, scale=2), nullable=False),
+        sa.Column("price_per_unit", sa.Numeric(precision=12, scale=2), nullable=False),
+        sa.Column(
+            "discount",
+            sa.Numeric(precision=12, scale=2),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column("total", sa.Numeric(precision=14, scale=2), nullable=False),
+        sa.Column(
+            "payment_type",
+            sa.Enum("cash", "transfer", "card", "credit", name="payment_type"),
+            server_default=sa.text("'cash'"),
+            nullable=False,
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "is_flagged", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["cycle_id"],
+            ["accounting_cycles.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["product_id"],
+            ["products.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # 3. Create indexes
-    op.create_index('idx_businesses_name', 'businesses', [sa.text('name gin_trgm_ops')], postgresql_using='gin')
-    op.create_index('idx_businesses_city_industry', 'businesses', ['city', 'industry'])
-    op.create_index('idx_users_role', 'users', ['role'])
-    op.create_index('idx_users_status', 'users', ['status'])
-    op.create_index('idx_users_business_id', 'users', ['business_id'])
-    op.create_index('idx_products_business_id', 'products', ['business_id'])
-    op.create_index('idx_accounting_cycles_business_id', 'accounting_cycles', ['business_id'])
-    op.create_index('idx_accounting_cycles_open_period', 'accounting_cycles', ['business_id', 'period_type'], unique=True, postgresql_where=sa.text('NOT is_closed'))
-    op.create_index('idx_sales_business_id_created_at', 'sales', ['business_id', 'created_at'])
-    op.create_index('idx_sales_cycle_id', 'sales', ['cycle_id'])
-    op.create_index('idx_purchases_business_id_created_at', 'purchases', ['business_id', 'created_at'])
-    op.create_index('idx_purchases_cycle_id', 'purchases', ['cycle_id'])
-    op.create_index('idx_debtors_business_id', 'debtors', ['business_id'])
-    op.create_index('idx_daily_summaries_business_id_date', 'daily_summaries', ['business_id', 'summary_date'])
-    op.create_index('idx_audit_trail_business_id_changed_at', 'audit_trail', ['business_id', 'changed_at'])
-    op.create_index('idx_audit_trail_table_record', 'audit_trail', ['table_name', 'record_id'])
+    op.create_index(
+        "idx_businesses_name",
+        "businesses",
+        [sa.text("name gin_trgm_ops")],
+        postgresql_using="gin",
+    )
+    op.create_index("idx_businesses_city_industry", "businesses", ["city", "industry"])
+    op.create_index("idx_users_role", "users", ["role"])
+    op.create_index("idx_users_status", "users", ["status"])
+    op.create_index("idx_users_business_id", "users", ["business_id"])
+    op.create_index("idx_products_business_id", "products", ["business_id"])
+    op.create_index(
+        "idx_accounting_cycles_business_id", "accounting_cycles", ["business_id"]
+    )
+    op.create_index(
+        "idx_accounting_cycles_open_period",
+        "accounting_cycles",
+        ["business_id", "period_type"],
+        unique=True,
+        postgresql_where=sa.text("NOT is_closed"),
+    )
+    op.create_index(
+        "idx_sales_business_id_created_at", "sales", ["business_id", "created_at"]
+    )
+    op.create_index("idx_sales_cycle_id", "sales", ["cycle_id"])
+    op.create_index(
+        "idx_purchases_business_id_created_at",
+        "purchases",
+        ["business_id", "created_at"],
+    )
+    op.create_index("idx_purchases_cycle_id", "purchases", ["cycle_id"])
+    op.create_index("idx_debtors_business_id", "debtors", ["business_id"])
+    op.create_index(
+        "idx_daily_summaries_business_id_date",
+        "daily_summaries",
+        ["business_id", "summary_date"],
+    )
+    op.create_index(
+        "idx_audit_trail_business_id_changed_at",
+        "audit_trail",
+        ["business_id", "changed_at"],
+    )
+    op.create_index(
+        "idx_audit_trail_table_record", "audit_trail", ["table_name", "record_id"]
+    )
 
     # 4. Enable Row-Level Security (RLS)
     tables = [
-        'businesses', 'users', 'products', 'accounting_cycles',
-        'sales', 'purchases', 'debtors', 'daily_summaries', 'audit_trail'
+        "businesses",
+        "users",
+        "products",
+        "accounting_cycles",
+        "sales",
+        "purchases",
+        "debtors",
+        "daily_summaries",
+        "audit_trail",
     ]
     for t in tables:
         op.execute(f"ALTER TABLE {t} ENABLE ROW LEVEL SECURITY;")
@@ -226,7 +462,14 @@ def upgrade() -> None:
         USING (id = auth.uid() OR (business_id = get_user_business_id(auth.uid()) AND get_user_role(auth.uid()) IN ('owner', 'admin')));
     """)
 
-    scoped_tables = ['products', 'accounting_cycles', 'sales', 'purchases', 'debtors', 'daily_summaries']
+    scoped_tables = [
+        "products",
+        "accounting_cycles",
+        "sales",
+        "purchases",
+        "debtors",
+        "daily_summaries",
+    ]
     for t in scoped_tables:
         op.execute(f"""
             CREATE POLICY {t}_select_policy ON {t} FOR SELECT TO authenticated
@@ -421,7 +664,14 @@ def upgrade() -> None:
         END;
         $$ LANGUAGE plpgsql SECURITY DEFINER;
     """)
-    for t in ['businesses', 'users', 'products', 'accounting_cycles', 'sales', 'purchases']:
+    for t in [
+        "businesses",
+        "users",
+        "products",
+        "accounting_cycles",
+        "sales",
+        "purchases",
+    ]:
         op.execute(f"""
             CREATE TRIGGER trg_audit_{t}
             AFTER INSERT OR UPDATE OR DELETE ON {t}
@@ -432,7 +682,14 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # 1. Drop audit triggers
-    for t in ['businesses', 'users', 'products', 'accounting_cycles', 'sales', 'purchases']:
+    for t in [
+        "businesses",
+        "users",
+        "products",
+        "accounting_cycles",
+        "sales",
+        "purchases",
+    ]:
         op.execute(f"DROP TRIGGER IF EXISTS trg_audit_{t} ON {t};")
     op.execute("DROP FUNCTION IF EXISTS process_audit_log();")
 

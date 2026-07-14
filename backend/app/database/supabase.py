@@ -1,6 +1,7 @@
 from supabase import create_client, Client, ClientOptions
 from app.config import settings
 
+
 def get_supabase_service_client() -> Client:
     """
     Returns a Supabase client configured with the service role key.
@@ -12,8 +13,9 @@ def get_supabase_service_client() -> Client:
         options=ClientOptions(
             postgrest_client_timeout=10,
             storage_client_timeout=10,
-        )
+        ),
     )
+
 
 def get_supabase_user_client(access_token: str) -> Client:
     """
@@ -27,5 +29,5 @@ def get_supabase_user_client(access_token: str) -> Client:
             headers={"Authorization": f"Bearer {access_token}"},
             postgrest_client_timeout=10,
             storage_client_timeout=10,
-        )
+        ),
     )

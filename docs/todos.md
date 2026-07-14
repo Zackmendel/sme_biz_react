@@ -170,42 +170,42 @@ in their own recorded data — no invented figures, ever.
 
 **Backend**
 
-- [ ] Chat thread CRUD (list threads, create thread, load history) —
+- [x] Chat thread CRUD (list threads, create thread, load history) —
   same shape as the reference template
-- [ ] `POST /chat/stream` — accepts AI SDK message format; **for the first
+- [x] `POST /chat/stream` — accepts AI SDK message format; **for the first
   pass, stub the assistant reply** before wiring real tools
-- [ ] `app/assistant/agent.py` — PydanticAI agent configured with a Gemini
+- [x] `app/assistant/agent.py` — PydanticAI agent configured with a Gemini
   model (verify the current recommended model name against Google's docs;
   don't hardcode a PRD-quoted model string that may be stale by
   implementation time)
-- [ ] `app/assistant/tools.py` — bounded, typed tools only:
+- [x] `app/assistant/tools.py` — bounded, typed tools only:
   `query_daily_summary(date_range)`, `query_sales(date_range, filters)`,
   `query_purchases(date_range, filters)`, `query_debtors()`. No
   agent-generated free-form SQL.
-- [ ] `app/analytics/queries.py` — the actual typed SQL behind those tools,
+- [x] `app/analytics/queries.py` — the actual typed SQL behind those tools,
   scoped to the caller's `business_id`
-- [ ] `app/grounding/validator.py` — every cited figure maps to a row a
+- [x] `app/grounding/validator.py` — every cited figure maps to a row a
   tool call actually returned this turn; fail closed otherwise
-- [ ] `app/chat/orchestrator.py` — one turn: resolve `business_id` → agent
+- [x] `app/chat/orchestrator.py` — one turn: resolve `business_id` → agent
   run → validate grounding → stream → persist
-- [ ] `app/chat/streaming.py` — AI SDK-compatible stream (text deltas +
+- [x] `app/chat/streaming.py` — AI SDK-compatible stream (text deltas +
   row-citation metadata parts)
-- [ ] Persist citations linked to assistant messages
-- [ ] Unit tests: tool query correctness (mocked DB), citation validation,
+- [x] Persist citations linked to assistant messages
+- [x] Unit tests: tool query correctness (mocked DB), citation validation,
   grounding enforcement — same bar as the reference template's grounding
   tests
 
 **Frontend**
 
-- [ ] Chat drawer/icon available from any screen
-- [ ] AI SDK chat primitives pointed at `POST /chat/stream`
-- [ ] Row-citation chips on assistant messages ("from your sales, 3 Jul")
-- [ ] Verify against the example questions in
+- [x] Chat drawer/icon available from any screen
+- [x] AI SDK chat primitives pointed at `POST /chat/stream`
+- [x] Row-citation chips on assistant messages ("from your sales, 3 Jul")
+- [x] Verify against the example questions in
   [product-brief.md](product-brief.md#example-owner-questions):
-  - [ ] Answers cite specific dates/rows, not vague summaries
-  - [ ] Under-specified or unsupported questions get an honest "not enough
+  - [x] Answers cite specific dates/rows, not vague summaries
+  - [x] Under-specified or unsupported questions get an honest "not enough
     data" response instead of an estimate
-  - [ ] The agent never attempts to write to the ledger
+  - [x] The agent never attempts to write to the ledger
 
 ---
 

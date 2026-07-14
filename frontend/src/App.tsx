@@ -10,6 +10,7 @@ import { LedgerPage } from "@/pages/ledger";
 import { DashboardPage } from "@/pages/dashboard";
 import { DebtorsPage } from "@/pages/debtors";
 import { DailyReportPage } from "@/pages/daily-report";
+import { ChatDrawer } from "@/components/chat/chat-drawer";
 import { useAuth } from "@/components/auth/auth-context";
 import { TrendingUp, Package, Users, LogOut, Home, ShoppingCart, AlertCircle, ClipboardList } from "lucide-react";
 
@@ -86,6 +87,7 @@ function Layout() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8">
         <Outlet />
       </main>
+      <ChatDrawer />
     </div>
   );
 }

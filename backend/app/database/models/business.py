@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.database.models.daily_summary import DailySummary
     from app.database.models.audit_trail import AuditTrail
 
+
 class Business(Base):
     __tablename__ = "businesses"
 
@@ -29,17 +30,29 @@ class Business(Base):
     owner_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     industry: Mapped[BusinessIndustry] = mapped_column(
-        Enum(BusinessIndustry, name="business_industry"),
+        Enum(
+            BusinessIndustry,
+            name="business_industry",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
     )
     scale: Mapped[BusinessScale] = mapped_column(
-        Enum(BusinessScale, name="business_scale"),
+        Enum(
+            BusinessScale,
+            name="business_scale",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
     )
     phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     city: Mapped[NigeriaCityList] = mapped_column(
-        Enum(NigeriaCityList, name="nigeria_city_list"),
+        Enum(
+            NigeriaCityList,
+            name="nigeria_city_list",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
     )
     address: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -50,11 +63,27 @@ class Business(Base):
         server_default=text("now()"),
     )
 
-    users: Mapped[List["User"]] = relationship("User", back_populates="business", cascade="all, delete-orphan")
-    products: Mapped[List["Product"]] = relationship("Product", back_populates="business", cascade="all, delete-orphan")
-    accounting_cycles: Mapped[List["AccountingCycle"]] = relationship("AccountingCycle", back_populates="business", cascade="all, delete-orphan")
-    sales: Mapped[List["Sale"]] = relationship("Sale", back_populates="business", cascade="all, delete-orphan")
-    purchases: Mapped[List["Purchase"]] = relationship("Purchase", back_populates="business", cascade="all, delete-orphan")
-    debtors: Mapped[List["Debtor"]] = relationship("Debtor", back_populates="business", cascade="all, delete-orphan")
-    daily_summaries: Mapped[List["DailySummary"]] = relationship("DailySummary", back_populates="business", cascade="all, delete-orphan")
-    audit_trails: Mapped[List["AuditTrail"]] = relationship("AuditTrail", back_populates="business", cascade="all, delete-orphan")
+    users: Mapped[List["User"]] = relationship(
+        "User", back_populates="business", cascade="all, delete-orphan"
+    )
+    products: Mapped[List["Product"]] = relationship(
+        "Product", back_populates="business", cascade="all, delete-orphan"
+    )
+    accounting_cycles: Mapped[List["AccountingCycle"]] = relationship(
+        "AccountingCycle", back_populates="business", cascade="all, delete-orphan"
+    )
+    sales: Mapped[List["Sale"]] = relationship(
+        "Sale", back_populates="business", cascade="all, delete-orphan"
+    )
+    purchases: Mapped[List["Purchase"]] = relationship(
+        "Purchase", back_populates="business", cascade="all, delete-orphan"
+    )
+    debtors: Mapped[List["Debtor"]] = relationship(
+        "Debtor", back_populates="business", cascade="all, delete-orphan"
+    )
+    daily_summaries: Mapped[List["DailySummary"]] = relationship(
+        "DailySummary", back_populates="business", cascade="all, delete-orphan"
+    )
+    audit_trails: Mapped[List["AuditTrail"]] = relationship(
+        "AuditTrail", back_populates="business", cascade="all, delete-orphan"
+    )

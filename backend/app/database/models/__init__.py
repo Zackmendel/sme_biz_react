@@ -17,6 +17,8 @@ from app.database.models.purchase import Purchase
 from app.database.models.debtor import Debtor
 from app.database.models.daily_summary import DailySummary
 from app.database.models.audit_trail import AuditTrail
+from app.database.models.chat_thread import ChatThread
+from app.database.models.chat_message import ChatMessage
 
 __all__ = [
     "Base",
@@ -36,4 +38,6 @@ __all__ = [
     "Debtor",
     "DailySummary",
     "AuditTrail",
+    "ChatThread",
+    "ChatMessage",
 ]

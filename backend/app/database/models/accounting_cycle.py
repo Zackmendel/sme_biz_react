@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.database.models.sale import Sale
     from app.database.models.purchase import Purchase
 
+
 class AccountingCycle(Base):
     __tablename__ = "accounting_cycles"
 
@@ -27,7 +28,11 @@ class AccountingCycle(Base):
         nullable=False,
     )
     period_type: Mapped[PeriodEnum] = mapped_column(
-        Enum(PeriodEnum, name="period_enum"),
+        Enum(
+            PeriodEnum,
+            name="period_enum",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
     )
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -51,6 +56,12 @@ class AccountingCycle(Base):
         server_default=text("false"),
     )
 
-    business: Mapped["Business"] = relationship("Business", back_populates="accounting_cycles")
-    sales: Mapped[List["Sale"]] = relationship("Sale", back_populates="accounting_cycle")
-    purchases: Mapped[List["Purchase"]] = relationship("Purchase", back_populates="accounting_cycle")
+    business: Mapped["Business"] = relationship(
+        "Business", back_populates="accounting_cycles"
+    )
+    sales: Mapped[List["Sale"]] = relationship(
+        "Sale", back_populates="accounting_cycle"
+    )
+    purchases: Mapped[List["Purchase"]] = relationship(
+        "Purchase", back_populates="accounting_cycle"
+    )

@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -15,7 +16,6 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 import sys
-import os
 from pathlib import Path
 
 # Add the backend root directory to sys.path to allow absolute imports of app

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     # Gemini config
     GEMINI_API_KEY: str | None = None
     GEMINI_MODEL: str = "gemini-2.5-flash"  # Default model, can be overridden
+    GCP_PROJECT_ID: str | None = None
+    GCP_LOCATION: str = "us-central1"
 
     # Telegram configuration
     TELEGRAM_BOT_TOKEN: str

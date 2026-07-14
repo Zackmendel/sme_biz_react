@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.database.models.accounting_cycle import AccountingCycle
     from app.database.models.product import Product
 
+
 class Sale(Base):
     __tablename__ = "sales"
 
@@ -54,7 +55,11 @@ class Sale(Base):
     )
     total: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     payment_type: Mapped[PaymentType] = mapped_column(
-        Enum(PaymentType, name="payment_type"),
+        Enum(
+            PaymentType,
+            name="payment_type",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
         default=PaymentType.CASH,
         server_default=text("'cash'"),
@@ -73,5 +78,9 @@ class Sale(Base):
 
     business: Mapped["Business"] = relationship("Business", back_populates="sales")
     user: Mapped["User"] = relationship("User", back_populates="sales")
-    accounting_cycle: Mapped["AccountingCycle"] = relationship("AccountingCycle", back_populates="sales")
-    product: Mapped[Optional["Product"]] = relationship("Product", back_populates="sales")
+    accounting_cycle: Mapped["AccountingCycle"] = relationship(
+        "AccountingCycle", back_populates="sales"
+    )
+    product: Mapped[Optional["Product"]] = relationship(
+        "Product", back_populates="sales"
+    )
