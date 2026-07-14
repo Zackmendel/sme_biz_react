@@ -29,5 +29,5 @@ COPY . .
 
 EXPOSE 8000
 
-# Start Uvicorn web service
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Uvicorn web service dynamically binding to Cloud Run's port
+CMD ["sh", "-c", "uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
