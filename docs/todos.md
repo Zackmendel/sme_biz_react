@@ -275,14 +275,11 @@ Goal: rules-based flags on top of the audit trail, not an LLM classifier.
 
 ## Phase 9 — Deployment
 
-- [ ] Vercel: frontend project from `frontend/`, `VITE_*` env vars set at
-  build time ([deployment guide](guides/deployment.md))
-- [ ] Google Cloud Run: backend container from `backend/`, min instances 0
-  (or 1 if cold starts hurt the chat experience)
+- [ ] Vercel: frontend project from `frontend/` (integrated via GitHub, `VITE_*` env vars set in Vercel dashboard at build time — [deployment guide](guides/deployment.md))
+- [ ] Google Cloud Run: backend container from `backend/` (deployed initially from local workspace, transition to GitHub Actions later; min instances 0)
 - [ ] Google Secret Manager: `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
   `TELEGRAM_BOT_TOKEN`, `DATABASE_URL`
-- [ ] Google Cloud Scheduler: nightly aggregation + cycle-close triggers
-  against the deployed Cloud Run endpoints
+- [ ] GitHub Actions Scheduler: nightly aggregation + cycle-close trigger against the deployed Cloud Run endpoint
 - [ ] Supabase: re-enable email confirmation for production if disabled
   during dev
 - [ ] Run `alembic upgrade head` against production Supabase (direct

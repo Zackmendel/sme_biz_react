@@ -89,27 +89,30 @@ not the transaction pooler URL.
    https://your-backend-url.run.app/health
    ```
 
-## Google Cloud Scheduler — nightly jobs
+## GitHub Actions — Nightly Job Scheduler (Recommended)
 
-Create two scheduler jobs pointing at secured backend endpoints (protect
-these with a shared secret or Cloud Run's built-in IAM invoker auth, not an
-open route):
+To run the nightly aggregation and close cycles at midnight, configure a GitHub Actions workflow that pings your deployed Cloud Run endpoint.
 
-- Nightly aggregation → the `daily_summaries` rollup endpoint.
-- Cycle-close → the cycle-close + report-generation endpoint, on whatever
-  cadence a given business's `accounting_cycles.period_type` requires.
+1. Create a file `.github/workflows/nightly-job.yml`:
+   ```yaml
+   name: Nightly Job Trigger
+   on:
+     schedule:
+       - cron: '0 0 * * *' # Every night at midnight UTC
+     workflow_dispatch: # Allows manual trigger from GitHub UI
+   jobs:
+     trigger:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Ping backend API
+           run: |
+             curl -X POST "https://your-backend-url.run.app/reports/trigger-daily" \
+                  -H "x-scheduler-token: ${{ secrets.SCHEDULER_API_TOKEN }}" \
+                  --fail --show-error
+   ```
 
-```bash
-gcloud scheduler jobs create http sme-biz-nightly-aggregation \
-  --schedule="0 0 * * *" \
-  --uri="https://your-backend-url.run.app/reports/aggregate" \
-  --http-method=POST \
-  --oidc-service-account-email=<scheduler-invoker>@<project>.iam.gserviceaccount.com
-```
-
-Verify the current recommended way to authenticate Scheduler → Cloud Run
-(OIDC token vs. a shared-secret header) against Google's docs — this has
-had more than one supported pattern over time.
+2. Go to your GitHub Repository Settings → **Secrets and variables** → **Actions** → **New repository secret**.
+3. Add a secret named `SCHEDULER_API_TOKEN` and set its value to your configured scheduler secret (matches the `SCHEDULER_API_TOKEN` environment variable on the Cloud Run backend).
 
 ## Supabase auth URLs
 
