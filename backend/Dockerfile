@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangoft2-1.0-0 \
     libjpeg-dev \
     libopenjp2-7-dev \
-    libharfbuzz-0b \
+    libharfbuzz0b \
     libglib2.0-0 \
     shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
