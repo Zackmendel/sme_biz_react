@@ -232,21 +232,21 @@ Goal: the automated end-of-day and end-of-cycle pipeline.
   owner notified if all retries fail
 - [x] Verify: manually trigger the endpoint against seeded data, confirm a
   Telegram message + PDF arrive with correct figures
-
+- [x] Add a means to edit account life cyclein the front end(This should have been done in phase 3)
 ---
 
 ## Phase 7 — Fraud / anomaly detection
 
 Goal: rules-based flags on top of the audit trail, not an LLM classifier.
 
-- [ ] `app/analytics/anomaly.py`: price-override detection (vs.
+- [x] `app/analytics/anomaly.py`: price-override detection (vs.
   `products.default_price`), off-hours entry detection, rapid
   delete-after-create detection, quantity-spike detection, new
   vendor/customer added by non-admin
-- [ ] Wire into the nightly job; set `is_flagged` on affected
+- [x] Wire into the nightly job; set `is_flagged` on affected
   `sales`/`purchases` rows
-- [ ] "Flags & Alerts" panel in the dashboard/reports view
-- [ ] Verify: seed a deliberately anomalous entry (e.g. a price 5x the
+- [x] "Flags & Alerts" panel in the dashboard/reports view
+- [x] Verify: seed a deliberately anomalous entry (e.g. a price 5x the
   default at 2am) and confirm it gets flagged
 
 ---

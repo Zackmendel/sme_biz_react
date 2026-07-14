@@ -212,3 +212,89 @@ def test_weasyprint_pdf_generation(db_session):
     )
     assert len(pdf_bytes) > 0
     assert pdf_bytes.startswith(b"%PDF")
+
+
+def test_anomaly_detection(db_session):
+    import uuid
+    from datetime import datetime, time
+    from app.database.models.product import Product
+
+    # 1. Create Business
+    biz = Business(
+        id=uuid.uuid4(),
+        name="Anomaly Test Biz",
+        industry=BusinessIndustry.RETAIL,
+        scale=BusinessScale.MICRO,
+        city=NigeriaCityList.LAGOS,
+    )
+    db_session.add(biz)
+    db_session.commit()
+
+    # 2. Create Product
+    prod = Product(
+        id=uuid.uuid4(),
+        business_id=biz.id,
+        name="Gala",
+        default_price=Decimal("100.00"),
+    )
+    db_session.add(prod)
+    db_session.commit()
+
+    # 3. Create Cycle
+    target_date = date.today()
+    cycle = AccountingCycle(
+        id=uuid.uuid4(),
+        business_id=biz.id,
+        period_type=PeriodEnum.WEEKLY,
+        start_date=target_date,
+        end_date=target_date,
+        balance_brought_forward=Decimal("0.00"),
+        debts_accrued=Decimal("0.00"),
+        is_closed=False,
+    )
+    db_session.add(cycle)
+    db_session.commit()
+
+    # 4. Normal sale (12:00 PM, correct price)
+    normal_sale = Sale(
+        id=uuid.uuid4(),
+        business_id=biz.id,
+        user_id=biz.id,
+        cycle_id=cycle.id,
+        product_id=prod.id,
+        item_name="Gala",
+        quantity=Decimal("1"),
+        price_per_unit=Decimal("100.00"),
+        discount=Decimal("0.00"),
+        total=Decimal("100.00"),
+        created_at=datetime.combine(target_date, time(12, 0)),
+    )
+
+    # 5. Anomalous sale (2:00 AM, 5x price override)
+    anomaly_sale = Sale(
+        id=uuid.uuid4(),
+        business_id=biz.id,
+        user_id=biz.id,
+        cycle_id=cycle.id,
+        product_id=prod.id,
+        item_name="Gala",
+        quantity=Decimal("1"),
+        price_per_unit=Decimal("500.00"),
+        discount=Decimal("0.00"),
+        total=Decimal("500.00"),
+        created_at=datetime.combine(target_date, time(2, 0)),
+    )
+
+    db_session.add(normal_sale)
+    db_session.add(anomaly_sale)
+    db_session.commit()
+
+    # 6. Run daily aggregation
+    run_daily_aggregation(db_session, target_date)
+
+    # 7. Refresh and assert
+    db_session.refresh(normal_sale)
+    db_session.refresh(anomaly_sale)
+
+    assert normal_sale.is_flagged is False
+    assert anomaly_sale.is_flagged is True

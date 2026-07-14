@@ -501,6 +501,34 @@ export async function markDebtorPaid(debtorId: number): Promise<Debtor> {
   return data as Debtor;
 }
 
+/**
+ * Fetch all flagged sales and purchases for a business.
+ */
+export async function fetchFlaggedTransactions(
+  businessId: string
+): Promise<{ sales: Sale[]; purchases: Purchase[] }> {
+  const [salesRes, purchasesRes] = await Promise.all([
+    supabase
+      .from("sales")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("is_flagged", true),
+    supabase
+      .from("purchases")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("is_flagged", true),
+  ]);
+
+  if (salesRes.error) throw salesRes.error;
+  if (purchasesRes.error) throw purchasesRes.error;
+
+  return {
+    sales: salesRes.data as Sale[],
+    purchases: purchasesRes.data as Purchase[],
+  };
+}
+
 
 
 

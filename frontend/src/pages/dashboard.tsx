@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/auth-context";
-import { fetchDailySummaries, type DailySummary } from "@/lib/supabase-data";
+import { fetchDailySummaries, fetchFlaggedTransactions, type DailySummary, type Sale, type Purchase } from "@/lib/supabase-data";
 import {
   AreaChart,
   Area,
@@ -11,11 +11,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Loader2, TrendingUp, TrendingDown, Landmark, Receipt, Users, Star, Calendar } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, Landmark, Receipt, Users, Star, Calendar, AlertTriangle, ShieldAlert } from "lucide-react";
 
 export function DashboardPage() {
   const { profile } = useAuth();
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
+  const [flaggedSales, setFlaggedSales] = useState<Sale[]>([]);
+  const [flaggedPurchases, setFlaggedPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,21 +27,26 @@ export function DashboardPage() {
   const businessId = profile?.business_id;
 
   useEffect(() => {
-    const loadSummaries = async () => {
+    const loadDashboardData = async () => {
       if (!businessId) return;
       try {
         setLoading(true);
-        const data = await fetchDailySummaries(businessId);
-        setSummaries(data);
+        const [summariesData, flaggedData] = await Promise.all([
+          fetchDailySummaries(businessId),
+          fetchFlaggedTransactions(businessId),
+        ]);
+        setSummaries(summariesData);
+        setFlaggedSales(flaggedData.sales);
+        setFlaggedPurchases(flaggedData.purchases);
       } catch (err: unknown) {
-        setError("Failed to fetch daily summaries.");
+        setError("Failed to fetch dashboard data.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadSummaries();
+    loadDashboardData();
   }, [businessId]);
 
   // Filter summaries based on timeframe
@@ -301,6 +308,88 @@ export function DashboardPage() {
                 />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Fraud & Anomaly Alerts Panel */}
+      <div className="rounded-2xl border border-border bg-card/45 p-6 shadow-lg space-y-4">
+        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 text-amber-500 animate-pulse" />
+            <div>
+              <h3 className="font-semibold text-lg">Fraud & Anomaly Alerts</h3>
+              <p className="text-xs text-muted-foreground">Rules-based compliance flags triggered during nightly rollups.</p>
+            </div>
+          </div>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            {flaggedSales.length + flaggedPurchases.length} Active
+          </span>
+        </div>
+
+        {flaggedSales.length === 0 && flaggedPurchases.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground bg-secondary/10 border border-dashed border-border rounded-xl">
+            <AlertTriangle className="h-8 w-8 text-muted-foreground/60 mb-2" />
+            <p className="text-sm font-medium">All ledger records are clean.</p>
+            <p className="text-xs text-muted-foreground/80 mt-0.5">No price deviations, off-hours actions, or quantity spikes detected.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border/80 text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4">Type</th>
+                  <th className="py-3 px-4">Item Name</th>
+                  <th className="py-3 px-4 text-right">Value</th>
+                  <th className="py-3 px-4 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {flaggedSales.map((s) => (
+                  <tr key={s.id} className="hover:bg-secondary/10 transition-colors">
+                    <td className="py-3 px-4 font-medium text-muted-foreground">
+                      {new Date(s.created_at).toLocaleDateString("en-NG", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium">
+                        Sale
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-foreground">{s.item_name}</td>
+                    <td className="py-3 px-4 text-right font-bold text-foreground">
+                      ₦{(Number(s.price_per_unit) * Number(s.quantity)).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold uppercase text-[9px]">
+                        Flagged
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {flaggedPurchases.map((p) => (
+                  <tr key={p.id} className="hover:bg-secondary/10 transition-colors">
+                    <td className="py-3 px-4 font-medium text-muted-foreground">
+                      {new Date(p.created_at).toLocaleDateString("en-NG", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-medium">
+                        Purchase
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-foreground">{p.item_name}</td>
+                    <td className="py-3 px-4 text-right font-bold text-foreground">
+                      ₦{(Number(p.price_per_unit) * Number(p.quantity)).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold uppercase text-[9px]">
+                        Flagged
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
