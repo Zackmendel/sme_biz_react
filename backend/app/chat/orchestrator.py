@@ -1,5 +1,7 @@
 import asyncio
+import time
 from typing import AsyncGenerator, List, Dict, Any
+import structlog
 from sqlalchemy.orm import Session
 from app.database.models.chat_thread import ChatThread
 from app.database.models.chat_message import ChatMessage
@@ -7,6 +9,8 @@ from app.assistant.agent import agent
 from app.assistant.deps import BusinessAgentDeps
 from app.grounding.validator import validate_grounding
 from app.chat.streaming import format_text_part, format_data_part, format_error_part
+
+logger = structlog.get_logger()
 
 
 async def orchestrate_chat_turn(
@@ -25,6 +29,8 @@ async def orchestrate_chat_turn(
     5. Saves assistant reply and citations.
     6. Streams response chunks and citation metadata to the client.
     """
+    start_time = time.perf_counter()
+    user_message_text = ""
     try:
         # 1. Verify thread belongs to this business
         thread = (
@@ -48,6 +54,14 @@ async def orchestrate_chat_turn(
         # 2. Extract and save the user's latest message
         user_message_data = messages[-1]
         user_message_text = user_message_data.get("content", "")
+
+        logger.info(
+            "chat_turn_started",
+            business_id=business_id,
+            user_id=user_id,
+            thread_id=str(thread.id),
+            user_message_length=len(user_message_text),
+        )
 
         user_msg = ChatMessage(
             thread_id=thread.id,
@@ -96,6 +110,17 @@ async def orchestrate_chat_turn(
         db.add(assistant_msg)
         db.commit()
 
+        elapsed_seconds = time.perf_counter() - start_time
+        logger.info(
+            "chat_turn_completed",
+            business_id=business_id,
+            user_id=user_id,
+            thread_id=str(thread.id),
+            elapsed_seconds=elapsed_seconds,
+            response_length=len(grounded_result.answer),
+            citations_count=len(serialized_citations),
+        )
+
         # 7. Stream response deltas simulating text arrival
         answer = grounded_result.answer
         # Split into small parts to simulate stream chunking
@@ -112,6 +137,16 @@ async def orchestrate_chat_turn(
 
     except Exception as e:
         db.rollback()
+        elapsed_seconds = time.perf_counter() - start_time
+        logger.error(
+            "chat_turn_failed",
+            business_id=business_id,
+            user_id=user_id,
+            thread_id=thread_id,
+            elapsed_seconds=elapsed_seconds,
+            error=str(e),
+            user_message_sample=user_message_text[:100],
+        )
         # Stream the error event cleanly
         yield format_error_part(f"Failed to process chat: {str(e)}")
         raise e

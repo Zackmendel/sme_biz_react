@@ -1,5 +1,6 @@
 from datetime import date as date_type, timedelta
 from typing import Optional
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
 from app.database.session import get_db
@@ -12,6 +13,7 @@ from app.database.models.business import Business
 from app.database.models.daily_summary import DailySummary
 
 router = APIRouter(prefix="/reports", tags=["Reports & Aggregations"])
+logger = structlog.get_logger()
 
 
 def verify_scheduler_token(x_scheduler_token: Optional[str] = Header(None)):
@@ -52,60 +54,103 @@ async def trigger_daily_job(
     else:
         parsed_date = date_type.today() - timedelta(days=1)
 
-    # 2. Run Daily transaction aggregation
-    summaries = run_daily_aggregation(db, parsed_date)
+    logger.info("nightly_job_started", target_date=parsed_date.isoformat())
 
-    # 3. Check and close accounting cycles whose end_date has passed
-    closed_cycles = check_and_close_cycles(db, parsed_date)
+    try:
+        # 2. Run Daily transaction aggregation
+        summaries = run_daily_aggregation(db, parsed_date)
+        logger.info(
+            "daily_aggregation_completed",
+            target_date=parsed_date.isoformat(),
+            daily_summaries_count=len(summaries),
+        )
 
-    reports_sent = []
-    for cycle in closed_cycles:
-        # Get business details
-        biz = db.query(Business).filter(Business.id == cycle.business_id).first()
-        if not biz:
-            continue
+        # 3. Check and close accounting cycles whose end_date has passed
+        closed_cycles = check_and_close_cycles(db, parsed_date)
+        logger.info(
+            "cycle_closing_completed",
+            target_date=parsed_date.isoformat(),
+            closed_cycles_count=len(closed_cycles),
+        )
 
-        # Get summaries for this cycle period
-        cycle_summaries = (
-            db.query(DailySummary)
-            .filter(
-                DailySummary.business_id == biz.id,
-                DailySummary.summary_date >= cycle.start_date,
-                DailySummary.summary_date <= cycle.end_date,
+        reports_sent = []
+        for cycle in closed_cycles:
+            # Get business details
+            biz = db.query(Business).filter(Business.id == cycle.business_id).first()
+            if not biz:
+                logger.warning(
+                    "cycle_closing_missing_business",
+                    cycle_id=str(cycle.id),
+                    business_id=str(cycle.business_id),
+                )
+                continue
+
+            # Get summaries for this cycle period
+            cycle_summaries = (
+                db.query(DailySummary)
+                .filter(
+                    DailySummary.business_id == biz.id,
+                    DailySummary.summary_date >= cycle.start_date,
+                    DailySummary.summary_date <= cycle.end_date,
+                )
+                .order_by(DailySummary.summary_date.asc())
+                .all()
             )
-            .order_by(DailySummary.summary_date.asc())
-            .all()
+
+            # Generate narrative summary using Gemini
+            narrative = await generate_cycle_narrative(biz.name, cycle, cycle_summaries)
+
+            # Generate report PDF via WeasyPrint
+            pdf_bytes = generate_cycle_report_pdf(biz, cycle, cycle_summaries, narrative)
+
+            # Determine target chat ID
+            chat_id = settings.TELEGRAM_CHAT_ID
+
+            # Deliver to Telegram
+            success = send_telegram_report(
+                chat_id=chat_id,
+                message_text=f"📊 <b>Accounting Cycle Report Closed!</b>\n\nBusiness: <b>{biz.name}</b>\nPeriod: {cycle.period_type.value.capitalize()} ({cycle.start_date.isoformat()} to {cycle.end_date.isoformat()})\n\n{narrative}",
+                pdf_bytes=pdf_bytes,
+                filename=f"{biz.name.replace(' ', '_')}_{cycle.period_type.value}_cycle_report.pdf",
+            )
+            
+            logger.info(
+                "cycle_report_delivered",
+                business_id=str(biz.id),
+                business_name=biz.name,
+                cycle_id=str(cycle.id),
+                period=cycle.period_type.value,
+                delivered=success,
+            )
+            
+            reports_sent.append(
+                {
+                    "business_id": str(biz.id),
+                    "business_name": biz.name,
+                    "period": cycle.period_type.value,
+                    "delivered": success,
+                }
+            )
+
+        logger.info(
+            "nightly_job_completed",
+            target_date=parsed_date.isoformat(),
+            daily_summaries_count=len(summaries),
+            closed_cycles_count=len(closed_cycles),
+            reports_sent_count=len(reports_sent),
         )
 
-        # Generate narrative summary using Gemini
-        narrative = await generate_cycle_narrative(biz.name, cycle, cycle_summaries)
-
-        # Generate report PDF via WeasyPrint
-        pdf_bytes = generate_cycle_report_pdf(biz, cycle, cycle_summaries, narrative)
-
-        # Determine target chat ID
-        chat_id = settings.TELEGRAM_CHAT_ID
-
-        # Deliver to Telegram
-        success = send_telegram_report(
-            chat_id=chat_id,
-            message_text=f"📊 <b>Accounting Cycle Report Closed!</b>\n\nBusiness: <b>{biz.name}</b>\nPeriod: {cycle.period_type.value.capitalize()} ({cycle.start_date.isoformat()} to {cycle.end_date.isoformat()})\n\n{narrative}",
-            pdf_bytes=pdf_bytes,
-            filename=f"{biz.name.replace(' ', '_')}_{cycle.period_type.value}_cycle_report.pdf",
+        return {
+            "status": "success",
+            "date": parsed_date.isoformat(),
+            "daily_summaries_count": len(summaries),
+            "closed_cycles_count": len(closed_cycles),
+            "reports_sent": reports_sent,
+        }
+    except Exception as e:
+        logger.error(
+            "nightly_job_failed",
+            target_date=parsed_date.isoformat(),
+            error=str(e),
         )
-        reports_sent.append(
-            {
-                "business_id": str(biz.id),
-                "business_name": biz.name,
-                "period": cycle.period_type.value,
-                "delivered": success,
-            }
-        )
-
-    return {
-        "status": "success",
-        "date": parsed_date.isoformat(),
-        "daily_summaries_count": len(summaries),
-        "closed_cycles_count": len(closed_cycles),
-        "reports_sent": reports_sent,
-    }
+        raise e

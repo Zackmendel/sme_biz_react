@@ -253,21 +253,21 @@ Goal: rules-based flags on top of the audit trail, not an LLM classifier.
 
 ## Phase 8 — Pilot readiness
 
-- [ ] README "Running locally" section — copy-paste commands for backend +
+- [x] README "Running locally" section — copy-paste commands for backend +
   frontend + env vars
-- [ ] Smoke-test all example owner questions from
+- [x] Smoke-test all example owner questions from
   [product-brief.md](product-brief.md)
-- [ ] Confirm chat history persists across sessions
-- [ ] Confirm RLS actually isolates two different businesses' data end to
+- [x] Confirm chat history persists across sessions
+- [x] Confirm RLS actually isolates two different businesses' data end to
   end (create two test businesses, verify zero cross-visibility)
-- [ ] Structured logging on backend (`structlog`) for debugging failed
+- [x] Structured logging on backend (`structlog`) for debugging failed
   turns and failed nightly jobs
-- [ ] Review AI response latency: streaming should start within a few
+- [x] Review AI response latency: streaming should start within a few
   seconds for typical queries
-- [ ] Revisit the `nigeria_city_list` enum decision from Phase 0 — replace
+- [x] Revisit the `nigeria_city_list` enum decision from Phase 0 — replace
   with free text or a reference table before onboarding businesses outside
-  the seeded cities
-- [ ] Decide and document: multiple businesses per owner account? (Open
+  the seeded cities (Postponed: decided to keep the enum as-is for the pilot)
+- [x] Decide and document: multiple businesses per owner account? (Open
   question carried over from the PRD — affects auth model if answered
   "yes" later, so decide before Phase 9 lands in production)
 

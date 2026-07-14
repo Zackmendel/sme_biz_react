@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.chat import router as chat_router
 from app.api.reports import router as reports_router
+from app.logging_config import setup_logging
+
+setup_logging()
 
 app = FastAPI(
     title="SME Biz Analyst API",
