@@ -13,6 +13,6 @@ jobs:
     steps:
       - name: Trigger Daily Reporting and Aggregation Job
         run: |
-          curl -X POST "https://sme-biz-analyst-backend-xxxxxx.a.run.app/reports/trigger-daily" \
+          curl -X POST "${{ secrets.BACKEND_URL }}/reports/trigger-daily" \
                -H "x-scheduler-token: ${{ secrets.SCHEDULER_API_TOKEN }}" \
                --fail --show-error
