@@ -44,8 +44,45 @@
   --font-sans: "Geist Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ── Light theme (default) ──────────────────────────────────────── */
 :root {
   --radius: 0.625rem;
+  --background: oklch(0.97 0.003 285);
+  --foreground: oklch(0.13 0.015 285);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.13 0.015 285);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.13 0.015 285);
+  --primary: oklch(0.55 0.19 145);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.92 0.008 285);
+  --secondary-foreground: oklch(0.2 0.015 285);
+  --muted: oklch(0.93 0.005 285);
+  --muted-foreground: oklch(0.48 0.018 285);
+  --accent: oklch(0.92 0.008 285);
+  --accent-foreground: oklch(0.2 0.015 285);
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.86 0.01 285);
+  --input: oklch(0.86 0.01 285);
+  --ring: oklch(0.55 0.19 145);
+  --chart-1: oklch(0.55 0.19 145);
+  --chart-2: oklch(0.54 0.16 200);
+  --chart-3: oklch(0.62 0.15 65);
+  --chart-4: oklch(0.52 0.18 320);
+  --chart-5: oklch(0.57 0.14 30);
+  --sidebar-background: oklch(0.95 0.004 285);
+  --sidebar-foreground: oklch(0.2 0.015 285);
+  --sidebar-primary: oklch(0.55 0.19 145);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.9 0.008 285);
+  --sidebar-accent-foreground: oklch(0.2 0.015 285);
+  --sidebar-border: oklch(0.86 0.01 285);
+  --sidebar-ring: oklch(0.55 0.19 145);
+}
+
+/* ── Dark theme ─────────────────────────────────────────────────── */
+.dark {
   --background: oklch(0.14 0.005 285);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.17 0.008 285);
@@ -83,6 +120,23 @@
 @layer base {
   * {
     @apply border-border;
+    /* Smooth theme transition on all elements */
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+  }
+
+  /* Keep interaction elements snappy — don't let theme transition slow hover/active states */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+      color 0.1s ease, box-shadow 0.15s ease, opacity 0.15s ease,
+      transform 0.1s ease;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -91,4 +145,31 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Subtle theme-aware scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+
+  /* Consistent focus ring across all interactive elements */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
