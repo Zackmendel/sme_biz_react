@@ -41,7 +41,7 @@ export function LedgerPage() {
   // Sales Form States
   const [selectedProductId, setSelectedProductId] = useState("");
   const [customItemName, setCustomItemName] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [pricePerUnit, setPricePerUnit] = useState("");
   const [discount, setDiscount] = useState("0");
   const [customerDetails, setCustomerDetails] = useState("");
@@ -51,7 +51,7 @@ export function LedgerPage() {
   // Purchases Form States
   const [purchaseProductId, setPurchaseProductId] = useState("");
   const [purchaseCustomItemName, setPurchaseCustomItemName] = useState("");
-  const [purchaseQuantity, setPurchaseQuantity] = useState("");
+  const [purchaseQuantity, setPurchaseQuantity] = useState("1");
   const [purchasePricePerUnit, setPurchasePricePerUnit] = useState("");
   const [vendorDetails, setVendorDetails] = useState("");
   const [purchasesCycleId, setPurchasesCycleId] = useState("");
@@ -80,10 +80,10 @@ export function LedgerPage() {
       const todayStr = new Date().toISOString().split("T")[0];
       // 1. Force the cycle's end_date to be today (so the EOD aggregator closes it)
       await updateAccountingCycle(cycle.id, { end_date: todayStr });
-      
+
       // 2. Call backend reports generator
       await triggerDailyAggregation(todayStr);
-      
+
       setClosingStatus("Success! Accounting cycle closed. Narrative & PDF reports delivered.");
       // 3. Reload everything
       await loadData();
@@ -262,7 +262,7 @@ export function LedgerPage() {
       // Reset form
       setSelectedProductId("");
       setCustomItemName("");
-      setQuantity("");
+      setQuantity("1");
       setPricePerUnit("");
       setDiscount("0");
       setCustomerDetails("");
@@ -472,22 +472,20 @@ export function LedgerPage() {
         <div className="flex border border-border/80 bg-card rounded-xl p-1 shadow-sm">
           <button
             onClick={() => setActiveTab("sales")}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium rounded-lg transition-all ${
-              activeTab === "sales"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium rounded-lg transition-all ${activeTab === "sales"
                 ? "bg-primary text-primary-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <ShoppingCart className="h-4 w-4" />
             Log Sale
           </button>
           <button
             onClick={() => setActiveTab("purchases")}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium rounded-lg transition-all ${
-              activeTab === "purchases"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium rounded-lg transition-all ${activeTab === "purchases"
                 ? "bg-primary text-primary-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <ShoppingBag className="h-4 w-4" />
             Log Purchase
